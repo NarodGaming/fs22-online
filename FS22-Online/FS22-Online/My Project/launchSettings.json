@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FS22Online": {
+      "commandName": "Project",
+      "commandLineArgs": "listen localhost:6060"
+    }
+  }
+}
