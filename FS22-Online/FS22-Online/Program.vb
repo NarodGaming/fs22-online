@@ -71,7 +71,7 @@ Module Program
                                                                                ' Dashboard savegame page
                                                                                '*************************
 
-                                                                               WriteWebPageResponse(SavegameDashboard, response)
+                                                                               WriteWebPageResponse(SavegameDashboard(savegamenum), response)
 
                                                                            Case Else
                                                                                '404 Error. This happens when a request is made for a page
@@ -222,7 +222,7 @@ Module Program
         Return sb.ToString
     End Function
 
-    Private Function SavegameDashboard() As String
+    Private Function SavegameDashboard(ByVal savegamenum As Integer) As String
         Dim sb As New StringBuilder
 
         sb.AppendLine("<HTML>")
@@ -231,7 +231,14 @@ Module Program
 
         sb.AppendLine(GetLinksHTML())
 
-        sb.AppendLine("<p>DASHBOARD PAGE HERE, USE YOUR IMAGINATION :D</p>")
+        Dim FarmReaderObj As New FarmReader
+        Dim FarmNames As List(Of List(Of String)) = FarmReaderObj.GetFarms(savegamenum)
+
+        For Each farm In FarmNames
+            Dim roundedbal As Integer = CType(farm(1), Integer)
+            Dim roundedloan As Integer = CType(farm(2), Integer)
+            sb.AppendLine($"<p>Farm: {farm(0)} (${roundedbal} with debt of ${roundedloan})</p>")
+        Next
 
         sb.AppendLine("</HTML>")
 
