@@ -4,6 +4,7 @@ Imports System.Net.NetworkInformation
 Imports System.Text
 
 Module Program
+    Private prevrequest As String
     Sub Main(args As String())
 
         Dim hostName As String = Environment.MachineName
@@ -62,20 +63,29 @@ Module Program
                                                                        ' Redirect to savegame specific page
                                                                        Dim savegamenum As String = request.RawUrl.ToLower.Split("/savegame/")(1).Split("/")(0)
                                                                        Dim savegamerequest As String = request.RawUrl.ToLower.Split("/savegame/")(1).Substring(1)
-                                                                       savegamerequest = savegamerequest.Substring(savegamerequest.IndexOf("/"))
+                                                                       Try
+                                                                           savegamerequest = savegamerequest.Substring(savegamerequest.IndexOf("/"))
+                                                                       Catch ex As Exception
+                                                                           savegamerequest += "/dashboard"
+                                                                       End Try
 
                                                                        If savegamerequest.StartsWith("/farm/") Then
                                                                            farmhandled = True
 
                                                                            Dim farmnum As String = request.RawUrl.ToLower.Split("/farm/")(1).Split("/")(0)
                                                                            Dim farmrequest As String = request.RawUrl.ToLower.Split("/farm/")(1).Substring(1)
-                                                                           farmrequest = farmrequest.Substring(farmrequest.IndexOf("/"))
+                                                                           Try
+                                                                               farmrequest = farmrequest.Substring(farmrequest.IndexOf("/"))
+                                                                           Catch ex As Exception
+                                                                               farmrequest += "/dashboard"
+                                                                           End Try
 
                                                                            Select Case farmrequest
                                                                                Case "/dashboard"
                                                                                    ' Dashboard farm page
                                                                                    ' ******************
 
+                                                                                   prevrequest = request.RawUrl.ToLower
                                                                                    WriteWebPageResponse(FarmDashboard(farmnum), response)
 
                                                                                Case Else
@@ -83,7 +93,7 @@ Module Program
                                                                                    'or resource from a path that doesn't exist.
                                                                                    '******************************************
 
-
+                                                                                   prevrequest = request.RawUrl.ToLower
                                                                                    response.StatusCode = HttpStatusCode.NotFound
                                                                                    WriteWebPageResponse(Get404HTML(), response)
 
@@ -99,7 +109,15 @@ Module Program
                                                                                ' Dashboard savegame page
                                                                                '*************************
 
+                                                                               prevrequest = request.RawUrl.ToLower
                                                                                WriteWebPageResponse(SavegameDashboard(savegamenum), response)
+
+                                                                           Case "/economy"
+                                                                               ' Economy savegame page
+                                                                               '**********************
+
+                                                                               prevrequest = request.RawUrl.ToLower
+                                                                               WriteWebPageResponse(SavegameEconomy(savegamenum), response)
 
                                                                            Case Else
                                                                                '404 Error. This happens when a request is made for a page
@@ -107,15 +125,16 @@ Module Program
                                                                                '******************************************
 
                                                                                If farmhandled = False Then
+                                                                                   prevrequest = request.RawUrl.ToLower
                                                                                    response.StatusCode = HttpStatusCode.NotFound
                                                                                    WriteWebPageResponse(Get404HTML(), response)
                                                                                End If
 
 
                                                                        End Select
-                                                                       End If
+                                                                   End If
 
-                                                                       Select Case request.RawUrl.ToLower ' select case used for premade sites
+                                                                   Select Case request.RawUrl.ToLower ' select case used for premade sites
 
 
                                                                        'Redirect to the home page
@@ -127,6 +146,7 @@ Module Program
                                                                            'Home page
                                                                            '******************************************
 
+                                                                           prevrequest = request.RawUrl.ToLower
                                                                            WriteWebPageResponse(GetHomePage(hostName), response)
 
                                                                        Case "/img"
@@ -144,6 +164,7 @@ Module Program
                                                                            '******************************************
 
                                                                            If savegamehandled = False Then ' prevent 404 on savegame addresses
+                                                                               prevrequest = request.RawUrl.ToLower
                                                                                response.StatusCode = HttpStatusCode.NotFound
                                                                                WriteWebPageResponse(Get404HTML(), response)
                                                                            End If
@@ -179,7 +200,10 @@ Module Program
     End Sub
 
 
-    Private Sub WriteWebPageResponse(ByVal text As String, ByVal r As HttpListenerResponse)
+    Private Sub WriteWebPageResponse(ByVal text As String, ByVal r As HttpListenerResponse, Optional ByVal linkmap As String = "")
+        If Not linkmap = "" Then
+            text = linkmap + text
+        End If
 
         Dim data As Byte() = System.Text.Encoding.UTF8.GetBytes(text)
 
@@ -260,6 +284,10 @@ Module Program
 
         sb.AppendLine(GetLinksHTML())
 
+        sb.AppendLine(BuildLinkMap())
+
+        sb.AppendLine($"<p><a href=""/savegame/{savegamenum}/economy"">Check sell prices</a></p>")
+
         Dim FarmReaderObj As New FarmReader
         Dim FarmNames As List(Of List(Of String)) = FarmReaderObj.GetFarms(savegamenum)
 
@@ -274,6 +302,22 @@ Module Program
         Return sb.ToString
     End Function
 
+    Private Function SavegameEconomy(ByVal savegamenum As Integer) As String
+        Dim sb As New StringBuilder
+
+        sb.AppendLine("<HTML>")
+
+        sb.AppendLine(GetFaviconHTML())
+
+        sb.AppendLine(GetLinksHTML())
+
+        sb.AppendLine(BuildLinkMap())
+
+        sb.AppendLine("</HTML>")
+
+        Return sb.ToString
+    End Function
+
     Private Function FarmDashboard(ByVal farmnum As Integer) As String
         Dim sb As New StringBuilder
 
@@ -282,6 +326,8 @@ Module Program
         sb.AppendLine(GetFaviconHTML())
 
         sb.AppendLine(GetLinksHTML())
+
+        sb.AppendLine(BuildLinkMap())
 
         sb.AppendLine("<p>Test page</p>")
 
@@ -321,6 +367,37 @@ Module Program
         sb.AppendLine("<a class=""navbar-brand col-md-3 col-lg-2 me-0 px-3"" href=""/home"">FS22-Online</a>")
         sb.AppendLine("</header>")
 
+        Return sb.ToString
+    End Function
+
+    Private Function BuildLinkMap() As String
+        ' Builds up a way of easily going backwards
+
+        Dim sb As New StringBuilder
+        sb.AppendLine("<p><a href=""/home"">Home</a> ")
+        Dim workurl As String = prevrequest.Substring(1)
+        Dim currentline As String = ""
+        Dim testvar As Boolean = True
+
+        While testvar = True
+            Console.WriteLine(workurl)
+            Dim shortsplit As String = workurl.Split("/")(0)
+            currentline = currentline + "/" + shortsplit
+            workurl = workurl.Substring(workurl.IndexOf("/") + 1)
+            Console.WriteLine(workurl)
+            If shortsplit = "farm" Or shortsplit = "savegame" Then
+                sb.AppendLine($"> {shortsplit} ")
+            Else
+                sb.AppendLine($"> <a href=""{currentline}"">{shortsplit}</a> ")
+            End If
+
+            If workurl.IndexOf("/") = -1 Then
+                testvar = False
+                sb.AppendLine($" > {workurl}")
+            End If
+        End While
+
+        sb.AppendLine("</p>")
         Return sb.ToString
     End Function
 
