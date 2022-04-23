@@ -58,10 +58,38 @@ Module Program
                                                                    If request.RawUrl.ToLower.StartsWith("/savegame/") Then
                                                                        Dim SavegameCheckerObj As New SavegameChecker
                                                                        savegamehandled = True
+                                                                       Dim farmhandled As Boolean = False
                                                                        ' Redirect to savegame specific page
                                                                        Dim savegamenum As String = request.RawUrl.ToLower.Split("/savegame/")(1).Split("/")(0)
-                                                                       Dim savegamerequest As String = "/" + request.RawUrl.ToLower.Split("/savegame/")(1).Split("/")(1)
+                                                                       Dim savegamerequest As String = request.RawUrl.ToLower.Split("/savegame/")(1).Substring(1)
+                                                                       savegamerequest = savegamerequest.Substring(savegamerequest.IndexOf("/"))
 
+                                                                       If savegamerequest.StartsWith("/farm/") Then
+                                                                           farmhandled = True
+
+                                                                           Dim farmnum As String = request.RawUrl.ToLower.Split("/farm/")(1).Split("/")(0)
+                                                                           Dim farmrequest As String = request.RawUrl.ToLower.Split("/farm/")(1).Substring(1)
+                                                                           farmrequest = farmrequest.Substring(farmrequest.IndexOf("/"))
+
+                                                                           Select Case farmrequest
+                                                                               Case "/dashboard"
+                                                                                   ' Dashboard farm page
+                                                                                   ' ******************
+
+                                                                                   WriteWebPageResponse(FarmDashboard(farmnum), response)
+
+                                                                               Case Else
+                                                                                   '404 Error. This happens when a request is made for a page
+                                                                                   'or resource from a path that doesn't exist.
+                                                                                   '******************************************
+
+
+                                                                                   response.StatusCode = HttpStatusCode.NotFound
+                                                                                   WriteWebPageResponse(Get404HTML(), response)
+
+
+                                                                           End Select
+                                                                       End If
                                                                        If SavegameCheckerObj.CheckSaveGame(savegamenum) = False Then
                                                                            savegamerequest = "" ' blanks request to force 404
                                                                        End If
@@ -78,15 +106,16 @@ Module Program
                                                                                'or resource from a path that doesn't exist.
                                                                                '******************************************
 
-
-                                                                               response.StatusCode = HttpStatusCode.NotFound
-                                                                               WriteWebPageResponse(Get404HTML(), response)
+                                                                               If farmhandled = False Then
+                                                                                   response.StatusCode = HttpStatusCode.NotFound
+                                                                                   WriteWebPageResponse(Get404HTML(), response)
+                                                                               End If
 
 
                                                                        End Select
-                                                                   End If
+                                                                       End If
 
-                                                                   Select Case request.RawUrl.ToLower ' select case used for premade sites
+                                                                       Select Case request.RawUrl.ToLower ' select case used for premade sites
 
 
                                                                        'Redirect to the home page
@@ -235,10 +264,26 @@ Module Program
         Dim FarmNames As List(Of List(Of String)) = FarmReaderObj.GetFarms(savegamenum)
 
         For Each farm In FarmNames
-            Dim roundedbal As Integer = CType(farm(1), Integer)
-            Dim roundedloan As Integer = CType(farm(2), Integer)
-            sb.AppendLine($"<p>Farm: {farm(0)} (${roundedbal} with debt of ${roundedloan})</p>")
+            Dim roundedbal As Integer = CType(farm(2), Integer)
+            Dim roundedloan As Integer = CType(farm(3), Integer)
+            sb.AppendLine($"<p><a href=""/savegame/{savegamenum}/farm/{farm(0)}/dashboard"">Farm {farm(0)}: {farm(1)} (${roundedbal} with debt of ${roundedloan})</a></p>")
         Next
+
+        sb.AppendLine("</HTML>")
+
+        Return sb.ToString
+    End Function
+
+    Private Function FarmDashboard(ByVal farmnum As Integer) As String
+        Dim sb As New StringBuilder
+
+        sb.AppendLine("<HTML>")
+
+        sb.AppendLine(GetFaviconHTML())
+
+        sb.AppendLine(GetLinksHTML())
+
+        sb.AppendLine("<p>Test page</p>")
 
         sb.AppendLine("</HTML>")
 
