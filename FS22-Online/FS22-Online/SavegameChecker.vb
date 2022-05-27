@@ -4,7 +4,7 @@ Imports System.IO
 Imports Microsoft.VisualBasic.FileIO
 
 Public Class SavegameChecker
-    Public Function CheckFolder()
+    Public Function CheckFolder() As Boolean
         ' Will check that FS22 folder exists
         Dim FS22ExpectedFolder As String = SpecialDirectories.MyDocuments + "\My Games\FarmingSimulator2022"
         If Directory.Exists(FS22ExpectedFolder) Then
@@ -14,7 +14,7 @@ Public Class SavegameChecker
         End If
     End Function
 
-    Public Function ReturnSavegames()
+    Public Function ReturnSavegames() As List(Of Boolean)
         ' Will return which savegames exist (1-20, list returned as array of true and false)
         Dim FS22ExpectedFolder As String = SpecialDirectories.MyDocuments + "\My Games\FarmingSimulator2022"
         Dim returnArray As New List(Of Boolean)
@@ -28,7 +28,7 @@ Public Class SavegameChecker
         Return returnArray
     End Function
 
-    Public Function CheckSaveGame(ByVal sgnum As Integer)
+    Public Function CheckSaveGame(ByVal sgnum As Integer) As Boolean
         ' Will return True or False depending on if savegame exists
         Dim FS22ExpectedFolder As String = SpecialDirectories.MyDocuments + "\My Games\FarmingSimulator2022"
         If File.Exists(FS22ExpectedFolder + "\savegame" + sgnum.ToString + "\careerSavegame.xml") Then
@@ -38,14 +38,14 @@ Public Class SavegameChecker
         End If
     End Function
 
-    Public Function FetchSavegameInfo(ByVal savegamenum As Integer)
+    Public Function FetchSavegameInfo(ByVal savegamenum As Integer) As List(Of String)
         ' Gets basic save game info like name
         Dim FS22ExpectedFolder As String = SpecialDirectories.MyDocuments + "\My Games\FarmingSimulator2022"
         Dim sgfs As New FileStream(FS22ExpectedFolder + "\savegame" + savegamenum.ToString + "\careerSavegame.xml", FileMode.Open, FileAccess.Read)
         Dim xmlreader As New XMLReader
-        Dim SavegameName As String = xmlreader.ReadNode(sgfs, "settings", "savegameName")
-        Dim saveDate As String = xmlreader.ReadNode(sgfs, "settings", "saveDate")
-        Dim saveMap As String = xmlreader.ReadNode(sgfs, "settings", "mapTitle")
+        Dim SavegameName As String = xmlreader.ReadNode(sgfs, "settings", "savegameName").ToString
+        Dim saveDate As String = xmlreader.ReadNode(sgfs, "settings", "saveDate").ToString
+        Dim saveMap As String = xmlreader.ReadNode(sgfs, "settings", "mapTitle").ToString
         Dim saveData As New List(Of String)({SavegameName, saveDate, saveMap})
         Return saveData
     End Function

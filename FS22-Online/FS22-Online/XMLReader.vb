@@ -4,7 +4,7 @@ Imports System.Xml
 Imports System.IO
 
 Public Class XMLReader
-    Public Function ReadNode(ByRef xmlinput As FileStream, ByVal outernode As String, ByVal innernode As String)
+    Public Function ReadNode(ByRef xmlinput As FileStream, ByVal outernode As String, ByVal innernode As String) As String
         Dim xmldoc As New XmlDataDocument()
         Dim xmlnode As XmlNodeList
         Dim i As Integer
@@ -20,7 +20,7 @@ Public Class XMLReader
         Throw New XmlException
     End Function
 
-    Public Function ReadNodesDetail(ByRef xmlinput As FileStream, ByVal outernode As String, ByVal innernode As String, ByVal attribname As String)
+    Public Function ReadNodesDetail(ByRef xmlinput As FileStream, ByVal outernode As String, ByVal innernode As String, ByVal attribname As String) As List(Of String)
         Dim xmldoc As New XmlDataDocument()
         Dim xmlnode As XmlNodeList
         Dim i As Integer

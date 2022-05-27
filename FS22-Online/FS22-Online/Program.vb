@@ -86,7 +86,7 @@ Module Program
                                                                                    ' ******************
 
                                                                                    prevrequest = request.RawUrl.ToLower
-                                                                                   WriteWebPageResponse(FarmDashboard(farmnum), response)
+                                                                                   WriteWebPageResponse(FarmDashboard(CInt(farmnum)), response)
 
                                                                                Case Else
                                                                                    '404 Error. This happens when a request is made for a page
@@ -100,7 +100,7 @@ Module Program
 
                                                                            End Select
                                                                        End If
-                                                                       If SavegameCheckerObj.CheckSaveGame(savegamenum) = False Then
+                                                                       If SavegameCheckerObj.CheckSaveGame(CInt(savegamenum)) = False Then
                                                                            savegamerequest = "" ' blanks request to force 404
                                                                        End If
 
@@ -110,14 +110,14 @@ Module Program
                                                                                '*************************
 
                                                                                prevrequest = request.RawUrl.ToLower
-                                                                               WriteWebPageResponse(SavegameDashboard(savegamenum), response)
+                                                                               WriteWebPageResponse(SavegameDashboard(CInt(savegamenum)), response)
 
                                                                            Case "/economy"
                                                                                ' Economy savegame page
                                                                                '**********************
 
                                                                                prevrequest = request.RawUrl.ToLower
-                                                                               WriteWebPageResponse(SavegameEconomy(savegamenum), response)
+                                                                               WriteWebPageResponse(SavegameEconomy(CInt(savegamenum)), response)
 
                                                                            Case Else
                                                                                '404 Error. This happens when a request is made for a page
