@@ -42,7 +42,7 @@ Module Program
                         Return
                     End Try
 
-                    Console.WriteLine($"Listening for HTTP requests at {netInterface}")
+                    Console.WriteLine($"Listening for HTTP requests at http://{netInterface}")
                     Console.WriteLine("Press any key to exit.")
 
                     'Start the web server on another thread
@@ -312,6 +312,13 @@ Module Program
         sb.AppendLine(GetLinksHTML())
 
         sb.AppendLine(BuildLinkMap())
+
+        Dim EconomyReaderObj As New EconomyReader
+        Dim EconomyList As List(Of EconomyItem) = EconomyReaderObj.GetEconomy(savegamenum)
+
+        For Each ecoitem In EconomyList
+
+        Next
 
         sb.AppendLine("</HTML>")
 
